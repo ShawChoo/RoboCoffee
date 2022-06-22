@@ -2,7 +2,7 @@
 
 /* USE ONLY ONE OPTION AT TIME IF NEEDED */
 //#define debug             /* uncomment for use with debug with avr-debugger */
-//#define serialDebug       /* uncomment for use with debug - serial monitor: baud rate=9600*/
+#define serialDebug       /* uncomment for use with debug - serial monitor: baud rate=9600*/
 
 #ifdef debug
 #include <avr8-stub.h>    /* include avr-debugger lib */
@@ -91,11 +91,12 @@ void game2CheckSequence();
 /* GAME3 Setup */
 #define game3Trigger 31
 #define game3Echo 30
-#define game3Sensor 19               /* ball game3Sensor */
+#define game3Sensor A0              /* ball game3Sensor */
 #define game3GreenLED 42             /* green led */
 #define game3RedLED 43               /* red led */
-#define game3GameInterval 10000      /* game-over time */
+#define game3GameInterval 15000      /* game-over time */
 #define game3MinimumPoints 3         /* minimum game3Points to win */
+
 
 uint8_t game3Points;
 uint32_t game3LastTime;              /* storing game-over time */
@@ -107,6 +108,7 @@ uint32_t game3LastBall,game3BallTime,game3ScoredTime,game3LastScoredTime;
 bool game3IsRunning = false;         /* is game running? */
 bool game3LastLedState = false;
 bool game3IsLEDReady = true;         /* is ready after LED handling */
+bool game3LastBallState;
 
 /* GAME3 functions declaration */
 void game3HandleGame();
@@ -172,10 +174,10 @@ void setup() {
     /* pins mode */
     pinMode(game3RedLED, OUTPUT);
     pinMode(game3GreenLED, OUTPUT);
-    pinMode(game3Sensor, INPUT_PULLUP);
+    //pinMode(game3Sensor, INPUT_PULLUP);
     pinMode(game3Trigger,OUTPUT);
     pinMode(game3Echo,INPUT);
-    attachInterrupt(digitalPinToInterrupt(game3Sensor), game3AddPoint, RISING);
+    //attachInterrupt(digitalPinToInterrupt(game3Sensor), game3AddPoint, RISING);
 
     /* pins mode */
     pinMode(game4SensorFirst, INPUT_PULLUP);
@@ -194,6 +196,7 @@ void loop() {
     game3HandleGame();
     game4HandleGame();
     handleMagnet();
+    //Serial.println(millis());
 
 }
 
@@ -327,7 +330,7 @@ void game2HandleGame(){
 
         /* handle GAME-OVER: time-out*/
         if (game2LedCursor == 6 && millis() - game2LastTime >= 10000) {
-            game2HandleLED(game2RedLED, 3000, 2000);
+            game2HandleLED(game2RedLED, 3000, 0);
             /* resets everything */
             game2CipherCursor = 0;
             game2ClearArray(game2GeneratedSequence, 5);
@@ -485,7 +488,7 @@ void game2CheckSequence() {
 /* MAIN FUNCTION  */
 void game3HandleGame() {
     game3ScoredTime=millis();
-    if(game3ScoredTime-game3LastScoredTime>=80){
+    if(game3IsRunning&&(game3ScoredTime-game3LastScoredTime>=18)){
         game3HandleSensor();
         game3LastScoredTime=game3ScoredTime;
     }
@@ -560,22 +563,33 @@ void game3HandleLED(int ledPIN, uint16_t onInterval, uint16_t offInterval) {
 }
 
 void game3HandleSensor(){
-    float time,distance;
-
+    float time;
+    uint16_t distance;
+/*
     digitalWrite(game3Trigger,HIGH);
     delayMicroseconds(10);
     digitalWrite(game3Trigger,LOW);
     delayMicroseconds(2);
-    time = pulseIn(game3Echo,HIGH);
-    distance=time*(340.0/20000.0);
+    time = pulseIn(game3Echo,HIGH);*/
+
+    distance = analogRead(game3Sensor);
+#ifdef serialDebug
     Serial.println(distance);
+#endif
+
     game3BallTime=millis();
-    if(game3BallTime-game3LastBall>=1000){
-        if(distance<=15){
+    if((game3LastBallState==false)&&(game3BallTime-game3LastBall>=750)){
+        if((game3LastBallState==false)&&(distance>=150)){
             game3Points++;
             game3LastBall=millis();
+            game3LastBallState=true;
         }
+
     }
+    else if((game3LastBallState==true)&&(distance<150)){
+        game3LastBallState=false;
+    }
+
 }
 
 void game4HandleGame() {
