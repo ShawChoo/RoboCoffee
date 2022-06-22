@@ -2,69 +2,102 @@
 
 /* USE ONLY ONE OPTION AT TIME IF NEEDED */
 //#define debug             /* uncomment for use with debug with avr-debugger */
-#define serialDebug       /* uncomment for use with debug - serial monitor: baud rate=9600*/
+//#define serialDebug       /* uncomment for use with debug - serial monitor: baud rate=9600*/
 
 #ifdef debug
 #include <avr8-stub.h>    /* include avr-debugger lib */
 #endif
 
-#define game1Magnet 22      /* Slučka */
-#define game2Magnet 23      /* Memory */
-#define game3Magnet 24      /* basket */
-#define game4Magnet 25      /* bludisko */
+/* Magnets Setup */
+#define game1Magnet 22      /* Circuit game - GAME1 */
+#define game2Magnet 23      /* Memory game - GAME2 */
+#define game3Magnet 24      /* Basketball game - GAME3 */
+#define game4Magnet 25      /* Labyrinth game - GAME4 */
 
 /* GAME1 Setup */
-#define game1SensorLeft 46               /* left game3Sensor */
-#define game1SensorRight 45               /* right game3Sensor */
-#define game1SensorConductor 47               /* conductor */
-#define game1GreenLED 48       /* green led */
-#define game1RedLED 49         /* red led */
-#define game1GameInterval 5000     /* game-over time */
+#define game1SensorLeft 46               /* left sensor */
+#define game1SensorRight 45              /* right sensor */
+#define game1SensorConductor 47          /* conductor */
+#define game1GreenLED 48                 /* green led */
+#define game1RedLED 49                   /* red led */
+#define game1GameInterval 5000           /* game-over time in ms */
+#define game1RedLedInterval 3000         /* game-over LED time in ms */
+#define game1GreenLedInterval 5000       /* win LED and magnet time in ms */
 
+/* GAME2 SETUP */
+#define game2LED1 8                 /* LED 1 */
+#define game2LED2 9                 /* LED 2 */
+#define game2LED3 10                /* LED 3 */
+#define game2LED4 11                /* LED 4 */
+#define game2LED5 12                /* LED 5 */
+#define game2RedLED 13              /* red led */
+#define game2GreenLED 7             /* green led */
+#define game2Button1 2              /* button 1 */
+#define game2Button2 3              /* button 2 */
+#define game2Button3 4              /* button 3 */
+#define game2Button4 5              /* button 4 */
+#define game2Button5 6              /* button 5 */
+#define game2StartButton 14         /* start button */
+#define game2GameInterval 10000     /* game-over time in ms */
+#define game2RedLedInterval 3000        /* game-over LED time in ms */
+#define game2GreenLedInterval 5000      /* win LED and magnet time in ms */
+
+/* GAME3 SETUP */
+#define game3Sensor A0               /* ball sensor - use analog pins only */
+#define game3SensorDistance 150      /* maximum ball distance constant: lower number=shorter distance */
+#define game3GreenLED 42             /* green led */
+#define game3RedLED 43               /* red led */
+#define game3GameInterval 15000      /* game-over time in ms*/
+#define game3MinimumPoints 3         /* minimum points to win */
+#define game3RedLedInterval 3000         /* game-over LED time in ms */
+#define game3GreenLedInterval 5000       /* win LED and magnet time in ms */
+
+/* Game4 SETUP */
+#define game4SensorFirst 38              /* sensor at 1st position of ball in labyrinth */
+#define game4SensorSecond 39             /* sensor at 2nd position of ball in labyrinth */
+#define game4GreenLED 40                 /* green led */
+#define game4RedLED 41                   /* red led */
+#define game4GameInterval 10000          /* game-over time in ms*/
+#define game4RedLedInterval 3000             /* game-over LED time in ms */
+#define game4GreenLedInterval 5000           /* win LED and magnet time in ms */
+
+/* arrays for easier defining pins */
+const uint8_t outputPins[] = {
+        game1Magnet, game2Magnet, game3Magnet, game4Magnet, game1GreenLED, game1RedLED, game2LED1, game2LED2, game2LED3,
+        game2LED4, game2LED5, game2RedLED, game2GreenLED, game3GreenLED, game3RedLED, game4GreenLED, game4RedLED};
+
+const uint8_t inputPins[] = {
+        game1SensorLeft, game1SensorRight, game1SensorConductor, game2Button1, game2Button2, game2Button3, game2Button4,
+        game2Button5, game2StartButton, game4SensorFirst, game4SensorSecond};
+
+/* GAME1 global vars */
 bool magnetOutput[4];
-int magnetPins[]={game1Magnet,game2Magnet,game3Magnet,game4Magnet};
+int magnetPins[] = {game1Magnet, game2Magnet, game3Magnet, game4Magnet};
 int game1GameState;              /* current game state - 0: ready, 1: left-right, 2: right-left, -1: restarting */
 int game1LastGameState = 0;      /* last game state - 0: ready, 1: left-right, 2: right-left, -1: restarting */
-uint32_t game1LastTime = 0;  /* storing game-over time */
+uint32_t game1LastTime = 0;      /* storing game-over time */
 uint8_t game1HandledLEDPin;
 uint16_t game1HandledLEDInterval;
 uint16_t game1HandledLEDDelay;
-uint32_t game1LastLEDTime;    /* storing LED handling time */
+uint32_t game1LastLEDTime;       /* storing LED handling time */
 bool game1LastLedState = false;
-bool game1IsLEDReady = true;        /* is ready after LED handling */
+bool game1IsLEDReady = true;     /* is ready after LED handling */
 
-/* functions declaration */
-void BuzzWire();
+/* GAME1 functions declaration */
+void game1HandleGame();
+
 void game1CheckStartConditions();
+
 void game1HandleLED(int ledPIN, uint16_t onInterval, uint16_t offInterval);
+
 void handleMagnet();
 
 
-/* GAME2 Setup */
-/* LEDs */
-#define game2LED1 8          /* LED 1 */
-#define game2LED2 9          /* LED 2 */
-#define game2LED3 10         /* LED 3 */
-#define game2LED4 11         /* LED 4 */
-#define game2LED5 12         /* LED 5 */
-#define game2RedLED 13       /* red led */
-#define game2GreenLED 7      /* green led */
-
-/* GAME2 buttons */
-#define game2Button1 2
-#define game2Button2 3
-#define game2Button3 4
-#define game2Button4 5
-#define game2Button5 6
-#define game2StartButton 14
-
-/* game2 helpful arrays */
+/* GAME2 global vars */
 int game2LedPins[] = {game2LED1, game2LED2, game2LED3, game2LED4, game2LED5, game2RedLED, game2GreenLED};
 int game2ButtonPins[] = {game2Button1, game2Button2, game2Button3, game2Button4, game2Button5, game2StartButton};
 bool game2LastButtonState[] = {HIGH, HIGH, HIGH, HIGH, HIGH};
 bool game2IsWrong;                   /* is entered sequence wrong? */
-
-/* game2 */
 uint8_t game2HandledLEDPin;
 uint16_t game2HandledLEDInterval;
 uint16_t game2HandledLEDDelay;
@@ -78,33 +111,29 @@ bool game2LastLedState = false;
 bool game2IsLEDReady = true;         /* is ready after LED handling */
 bool game2GameStarted = false;
 
-/* game2 functions declaration */
+/* GAME2 functions declaration */
 void game2HandleGame();
+
 int game2HandleButton();
+
 void game2HandleLED(int ledPIN, uint16_t onInterval, uint16_t offInterval);
+
 void game2GenerateNumber();
+
 void game2LightSequence();
+
 void game2ClearArray(uint8_t *array, uint8_t size);
+
 void game2CheckSequence();
 
-
-/* GAME3 Setup */
-#define game3Trigger 31
-#define game3Echo 30
-#define game3Sensor A0              /* ball game3Sensor */
-#define game3GreenLED 42             /* green led */
-#define game3RedLED 43               /* red led */
-#define game3GameInterval 15000      /* game-over time */
-#define game3MinimumPoints 3         /* minimum game3Points to win */
-
-
+/* GAME3 global vars */
 uint8_t game3Points;
 uint32_t game3LastTime;              /* storing game-over time */
 uint8_t game3HandledLEDPin;
 uint16_t game3HandledLEDInterval;
 uint16_t game3HandledLEDDelay;
 uint32_t game3LastLEDTime;           /* storing LED handling time */
-uint32_t game3LastBall,game3BallTime,game3ScoredTime,game3LastScoredTime;
+uint32_t game3LastBall, game3BallTime, game3ScoredTime, game3LastScoredTime;
 bool game3IsRunning = false;         /* is game running? */
 bool game3LastLedState = false;
 bool game3IsLEDReady = true;         /* is ready after LED handling */
@@ -112,17 +141,12 @@ bool game3LastBallState;
 
 /* GAME3 functions declaration */
 void game3HandleGame();
-void game3AddPoint();
+
 void game3HandleLED(int ledPIN, uint16_t onInterval, uint16_t offInterval);
+
 void game3HandleSensor();
 
-/* Game4 SETUP */
-#define game4SensorFirst 38              /* sensor at 1st position of ball in labyrinth */
-#define game4SensorSecond 39             /* sensor at 2nd position of ball in labyrinth */
-#define game4GreenLED 40                 /* green led */
-#define game4RedLED 41                   /* red led */
-#define game4GameInterval 10000          /* game-over time */
-
+/* GAME4 global vars */
 int game4GameState;                      /* current game state - 0: ready, 1: left-right, 2: right-left, -1: restarting */
 int game4LastGameState = 0;              /* last game state - 0: ready, 1: left-right, 2: right-left, -1: restarting */
 uint8_t game4HandledLEDPin;
@@ -134,7 +158,9 @@ bool game4IsLEDReady = true;             /* is ready after LED handling */
 
 /* GAME4 function declaration */
 void game4HandleGame();
+
 void game4HandleLED(int ledPIN, uint16_t onInterval, uint16_t offInterval);
+
 void game4CheckStartConditions();
 
 /**************
@@ -147,43 +173,19 @@ void setup() {
     debug_init();
 #endif
 
-    /* pins mode */
-    pinMode(game1Magnet,OUTPUT);
-    pinMode(game2Magnet,OUTPUT);
-    pinMode(game3Magnet,OUTPUT);
-    pinMode(game4Magnet,OUTPUT);
-
-    pinMode(game1SensorLeft, INPUT_PULLUP);
-    pinMode(game1SensorRight, INPUT_PULLUP);
-    pinMode(game1SensorConductor, INPUT_PULLUP);
-    pinMode(game1RedLED, OUTPUT);
-    pinMode(game1GreenLED, OUTPUT);
-
-
-
 #ifdef serialDebug
     Serial.begin(9600);
 #endif
 
-    /* pins mode */
-    for (int i = 0; i <= 6; i++)
-        pinMode(game2LedPins[i], OUTPUT);
-    for (int i = 0; i <= 5; i++)
-        pinMode(game2ButtonPins[i], INPUT_PULLUP);
+    /* pinMode for inputs */
+    for (int i = 0; i <= 11; i++) {
+        pinMode(inputPins[i], INPUT_PULLUP);
+    }
 
-    /* pins mode */
-    pinMode(game3RedLED, OUTPUT);
-    pinMode(game3GreenLED, OUTPUT);
-    //pinMode(game3Sensor, INPUT_PULLUP);
-    pinMode(game3Trigger,OUTPUT);
-    pinMode(game3Echo,INPUT);
-    //attachInterrupt(digitalPinToInterrupt(game3Sensor), game3AddPoint, RISING);
-
-    /* pins mode */
-    pinMode(game4SensorFirst, INPUT_PULLUP);
-    pinMode(game4SensorSecond, INPUT_PULLUP);
-    pinMode(game4RedLED, OUTPUT);
-    pinMode(game4GreenLED, OUTPUT);
+    /* pinMode for outputs */
+    for (int i = 0; i <= 17; i++) {
+        pinMode(outputPins[i], OUTPUT);
+    }
 }
 
 /**************
@@ -191,29 +193,32 @@ void setup() {
  *************/
 
 void loop() {
-    BuzzWire();
+    game1HandleGame();
     game2HandleGame();
     game3HandleGame();
     game4HandleGame();
     handleMagnet();
-    //Serial.println(millis());
 
+#ifdef serialDebug
+    Serial.print("Loop execution time: ");
+    Serial.println(millis());
+#endif
 }
 
-void handleMagnet(){
-    for(int i=0;i<4;i++){
-        digitalWrite(magnetPins[i],magnetOutput[i]);
+void handleMagnet() {
+    for (int i = 0; i < 4; i++) {
+        digitalWrite(magnetPins[i], magnetOutput[i]);
     }
 }
 
-/* MAIN FUNCTION  */
-void BuzzWire() {
+/* GAME1 MAIN FUNCTION  */
+void game1HandleGame() {
     unsigned long currentTime;
 
     /* restart after touching conductor */
     if ((digitalRead(game1SensorConductor) == LOW) && (game1LastGameState != -1)) {
         game1LastGameState = -1;
-        game1HandleLED(game1RedLED, 3000, 0);       //turn on red LED
+        game1HandleLED(game1RedLED, game1RedLedInterval, 0);       //turn on red LED
         game1GameState = 0;
     }
 
@@ -225,7 +230,7 @@ void BuzzWire() {
         if ((currentTime - game1LastTime) >= game1GameInterval) {
             game1GameState = 0;
             game1LastTime = currentTime;
-            game1HandleLED(game1RedLED, 3000, 0);   //turn on red LED
+            game1HandleLED(game1RedLED, game1RedLedInterval, 0);   //turn on red LED
         }
     }
 
@@ -233,16 +238,16 @@ void BuzzWire() {
 
     /* handle WIN: left->right */
     if ((game1GameState == 1) && (digitalRead(game1SensorRight) == LOW)) {
-        game1HandleLED(game1GreenLED, 3000, 0);     //turn on green LED
+        game1HandleLED(game1GreenLED, game1GreenLedInterval, 0);     //turn on green LED
         game1GameState = 0;
-        magnetOutput[0]=true;
+        magnetOutput[0] = true;
     }
 
     /* handle WIN: right->left */
     if ((game1GameState == 2) && (digitalRead(game1SensorLeft) == LOW)) {
-        game1HandleLED(game1GreenLED, 6000, 0);     //turn on green LED
+        game1HandleLED(game1GreenLED, game1GreenLedInterval, 0);     //turn on green LED
         game1GameState = 0;
-        magnetOutput[0]=true;
+        magnetOutput[0] = true;
     }
 
     /* turn off the LED after it was lit on */
@@ -251,15 +256,16 @@ void BuzzWire() {
 }
 
 void game1CheckStartConditions() {
-
     /* ready to start? left->right */
-    if (game1IsLEDReady && (game1GameState == 0) && ((digitalRead(game1SensorLeft) == LOW)) && (game1LastGameState != 1)) {
+    if (game1IsLEDReady && (game1GameState == 0) && ((digitalRead(game1SensorLeft) == LOW)) &&
+        (game1LastGameState != 1)) {
         game1GameState = 1;      /* left->right */
         game1HandleLED(game1GreenLED, 1000, 0);
         game1LastTime = millis();    /* restart the timer */
 
         /* ready to start? right->left */
-    } else if (game1IsLEDReady && (game1GameState == 0) && (digitalRead(game1SensorRight) == LOW) && (game1LastGameState != 2)) {
+    } else if (game1IsLEDReady && (game1GameState == 0) && (digitalRead(game1SensorRight) == LOW) &&
+               (game1LastGameState != 2)) {
         game1GameState = 2;      /* right->left */
         game1HandleLED(game1GreenLED, 1000, 0);
         game1LastTime = millis();    /* restart the timer */
@@ -268,7 +274,6 @@ void game1CheckStartConditions() {
 }
 
 void game1HandleLED(int ledPIN, uint16_t onInterval, uint16_t offInterval) {
-
     if (!game1LastLedState) {
         game1IsLEDReady = false;
         /* write data to global variables */
@@ -290,14 +295,13 @@ void game1HandleLED(int ledPIN, uint16_t onInterval, uint16_t offInterval) {
         game1LastLedState = false;
         game1IsLEDReady = true;
         digitalWrite(game1HandledLEDPin, LOW);
-        magnetOutput[0]=false;
+        magnetOutput[0] = false;
     }
 }
 
 /*  GAME2  */
 /* MAIN FUNCTION */
-void game2HandleGame(){
-
+void game2HandleGame() {
     /* waits for start button to be pressed */
     if (!game2GameStarted) {
         game2GameStarted = !digitalRead(game2StartButton);
@@ -309,8 +313,8 @@ void game2HandleGame(){
 
 #ifdef serialDebug
             Serial.print("Generated sequence:");
-            for (int i = 0; i < 5; i++)
-                Serial.print(game2GeneratedSequence[i]);
+            for (unsigned char i: game2GeneratedSequence)
+                Serial.print(i);
             Serial.println();
 #endif
         }
@@ -329,14 +333,15 @@ void game2HandleGame(){
         }
 
         /* handle GAME-OVER: time-out*/
-        if (game2LedCursor == 6 && millis() - game2LastTime >= 10000) {
-            game2HandleLED(game2RedLED, 3000, 0);
+        if (game2LedCursor == 6 && millis() - game2LastTime >= game2GameInterval) {
+            game2HandleLED(game2RedLED, game2RedLedInterval, 0);
             /* resets everything */
             game2CipherCursor = 0;
             game2ClearArray(game2GeneratedSequence, 5);
             game2ClearArray(game2PressedSequence, 5);
             game2LedCursor = 0;
             game2GameStarted = false;
+
 #ifdef serialDebug
             Serial.println("Time-out!");
 #endif
@@ -350,7 +355,6 @@ void game2HandleGame(){
 
 /* returns pressed button */
 int game2HandleButton() {
-
     int response = -1;   /* response if no button was pressed */
     if (game2IsLEDReady) {
         for (int8_t i = 0; i < 5; i++) {
@@ -365,7 +369,6 @@ int game2HandleButton() {
 
 /* Handling LEDs */
 void game2HandleLED(int ledPIN, uint16_t onInterval, uint16_t offInterval) {
-
     if (!game2LastLedState) {
         game2IsLEDReady = false;
         /* write data to global variables */
@@ -386,7 +389,7 @@ void game2HandleLED(int ledPIN, uint16_t onInterval, uint16_t offInterval) {
     if ((millis() - game2LastLEDTime) >= (game2HandledLEDInterval + game2HandledLEDDelay)) {
         game2LastLedState = false;
         game2IsLEDReady = true;
-        magnetOutput[1]=false;
+        magnetOutput[1] = false;
     }
 }
 
@@ -450,8 +453,8 @@ void game2CheckSequence() {
                     Serial.println("Sequence is correct!");
 #endif
 
-                    game2HandleLED(game2GreenLED, 3000, 2000);
-                    magnetOutput[1]=true;
+                    game2HandleLED(game2GreenLED, game2GreenLedInterval, 2000);
+                    magnetOutput[1] = true;
                     game2CipherCursor = 0;
                     game2ClearArray(game2GeneratedSequence, 5);
                     game2ClearArray(game2PressedSequence, 5);
@@ -467,7 +470,7 @@ void game2CheckSequence() {
                     Serial.println("Sequence is incorrect!");
 #endif
 
-                    game2HandleLED(game2RedLED, 3000, 2000);
+                    game2HandleLED(game2RedLED, game2RedLedInterval, 2000);
                     /* resets everything */
                     game2CipherCursor = 0;
                     game2ClearArray(game2GeneratedSequence, 5);
@@ -487,17 +490,17 @@ void game2CheckSequence() {
 /*  GAME3 */
 /* MAIN FUNCTION  */
 void game3HandleGame() {
-    game3ScoredTime=millis();
-    if(game3IsRunning&&(game3ScoredTime-game3LastScoredTime>=18)){
+    game3ScoredTime = millis();
+    if (game3IsRunning && (game3ScoredTime - game3LastScoredTime >= 18)) {
         game3HandleSensor();
-        game3LastScoredTime=game3ScoredTime;
+        game3LastScoredTime = game3ScoredTime;
     }
     /* handle WIN */
     if ((game3Points >= game3MinimumPoints) && !game3LastLedState) {
         game3IsRunning = false;
         game3Points = 0;
-        game3HandleLED(game3GreenLED, 3000, 2000);
-        magnetOutput[2]=true;
+        game3HandleLED(game3GreenLED, game3GreenLedInterval, 2000);
+        magnetOutput[2] = true;
     }
 
     /* resets the game-over timer */
@@ -510,7 +513,7 @@ void game3HandleGame() {
     if ((millis() - game3LastTime >= game3GameInterval) && !game3LastLedState) {
         game3IsRunning = false;
         game3Points = 0;
-        game3HandleLED(game3RedLED, 3000, 2000);
+        game3HandleLED(game3RedLED, game3RedLedInterval, 2000);
     }
 
     /* blinking green LED when game is running */
@@ -520,19 +523,6 @@ void game3HandleGame() {
     /* turn off the LED after it was lit on */
     if (game3LastLedState)
         game3HandleLED(game3HandledLEDPin, game3HandledLEDInterval, game3HandledLEDDelay);
-}
-
-/* function after being interrupted */
-void game3AddPoint() {
-    static unsigned long lastInterruptTime = 0;
-    unsigned long interruptTime = millis();
-
-    /* Debouncing interrupt signal with delay */
-    if (interruptTime - lastInterruptTime > 200) {
-        if (game3IsRunning)
-            game3Points++;
-    }
-    lastInterruptTime = interruptTime;
 }
 
 void game3HandleLED(int ledPIN, uint16_t onInterval, uint16_t offInterval) {
@@ -558,36 +548,35 @@ void game3HandleLED(int ledPIN, uint16_t onInterval, uint16_t offInterval) {
     if ((millis() - game3LastLEDTime) >= (game3HandledLEDInterval + game3HandledLEDDelay)) {
         game3LastLedState = false;
         game3IsLEDReady = true;
-        magnetOutput[2]=false;
+        magnetOutput[2] = false;
     }
 }
 
-void game3HandleSensor(){
-    float time;
+void game3HandleSensor() {
     uint16_t distance;
-/*
-    digitalWrite(game3Trigger,HIGH);
-    delayMicroseconds(10);
-    digitalWrite(game3Trigger,LOW);
-    delayMicroseconds(2);
-    time = pulseIn(game3Echo,HIGH);*/
-
     distance = analogRead(game3Sensor);
+
 #ifdef serialDebug
+    Serial.print("Sensor distance: ");
     Serial.println(distance);
 #endif
 
-    game3BallTime=millis();
-    if((game3LastBallState==false)&&(game3BallTime-game3LastBall>=750)){
-        if((game3LastBallState==false)&&(distance>=150)){
+    game3BallTime = millis();
+
+    if ((!game3LastBallState) && (game3BallTime - game3LastBall >= 750)) {
+        if (!game3LastBallState && (distance >= game3SensorDistance)) {
             game3Points++;
-            game3LastBall=millis();
-            game3LastBallState=true;
+
+#ifdef serialDebug
+            Serial.println("Ball!");
+#endif
+
+            game3LastBall = millis();
+            game3LastBallState = true;
         }
 
-    }
-    else if((game3LastBallState==true)&&(distance<150)){
-        game3LastBallState=false;
+    } else if (game3LastBallState && (distance < game3SensorDistance)) {
+        game3LastBallState = false;
     }
 
 }
@@ -599,23 +588,23 @@ void game4HandleGame() {
     if (game4GameState != 0 && (currentTime - game4LastTime >= game4GameInterval)) {
         game4LastGameState = -1;
         game4GameState = 0;
-        game4HandleLED(game4RedLED, 2000, 1000);
+        game4HandleLED(game4RedLED, game4RedLedInterval, 1000);
     }
 
     game4CheckStartConditions();
 
     /* handling WIN: 1st->2nd */
     if ((game4GameState == 1) && (digitalRead(game4SensorSecond) == LOW)) {
-        game4HandleLED(game4GreenLED, 2000, 0);
-        magnetOutput[3]=true;
+        game4HandleLED(game4GreenLED, game4GreenLedInterval, 0);
+        magnetOutput[3] = true;
         game4GameState = 0;
         game4LastTime = millis();
     }
 
     /* handling WIN: 2nd->1st */
     if ((game4GameState == 2) && (digitalRead(game4SensorFirst) == LOW)) {
-        game4HandleLED(game4GreenLED, 4000, 0);
-        magnetOutput[3]=true;
+        game4HandleLED(game4GreenLED, game4GreenLedInterval, 0);
+        magnetOutput[3] = true;
         game4GameState = 0;
         game4LastTime = millis();
     }
@@ -625,7 +614,6 @@ void game4HandleGame() {
 }
 
 void game4HandleLED(int ledPIN, uint16_t onInterval, uint16_t offInterval) {
-
     if (!game4LastLedState) {
         game4IsLEDReady = false;
         /* write data to global variables */
@@ -648,20 +636,21 @@ void game4HandleLED(int ledPIN, uint16_t onInterval, uint16_t offInterval) {
         game4LastLedState = false;
         game4IsLEDReady = true;
         digitalWrite(game4HandledLEDPin, LOW);
-        magnetOutput[3]=false;
+        magnetOutput[3] = false;
     }
 }
 
 void game4CheckStartConditions() {
-
     /* is ball at 1st end? */
-    if (game4IsLEDReady && (game4GameState == 0) && ((digitalRead(game4SensorFirst) == LOW)) && (game4LastGameState != 1)) {
+    if (game4IsLEDReady && (game4GameState == 0) && ((digitalRead(game4SensorFirst) == LOW)) &&
+        (game4LastGameState != 1)) {
         game4GameState = 1;
         game4HandleLED(game4GreenLED, 1000, 0);
         game4LastTime = millis();
 
         /* is ball at 2nd end? */
-    } else if (game4IsLEDReady && (game4GameState == 0) && (digitalRead(game4SensorSecond) == LOW) && (game4LastGameState != 2)) {
+    } else if (game4IsLEDReady && (game4GameState == 0) && (digitalRead(game4SensorSecond) == LOW) &&
+               (game4LastGameState != 2)) {
         game4GameState = 2;
         game4HandleLED(game4GreenLED, 1000, 0);
         game4LastTime = millis();
